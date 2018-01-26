@@ -13,9 +13,9 @@ Football Events by Jorge Saldivar
 # The other parameters for "message" and "warning" should also be set to FALSE
 # for other code chunks once you have verified that each plot comes out as you
 # want it to. This will clean up the flow of your report.
-
 library(ggplot2)
 library(dplyr)
+library(ggthemes)
 ```
 
 ```{r echo=FALSE, Load_the_Data}
@@ -42,15 +42,22 @@ head(events[11:15,cols_to_show])
 
 # Univariate Plots Section
 
-> **Tip**: In this section, you should perform some preliminary exploration of
-your dataset. Run some summaries of the data and create univariate plots to
-understand the structure of the individual variables in your dataset. Don't
-forget to add a comment after each plot or closely-related group of plots!
-There should be multiple code chunks and text sections; the first one below is
-just to help you get started.
+## Event Types
 
 ```{r echo=FALSE, Univariate_Plots}
+# order levels in decreasing order
+events$event_type = factor(events$event_type, levels=names(sort(table(events$event_type), decreasing=TRUE)))
+ggplot(aes(x=event_type, fill=event_type), data=events) +
+  geom_bar(colour="black") +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Event Type') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10))
+```
 
+```{r echo=FALSE}
+table(events$event_type)
 ```
 
 > **Tip**: Make sure that you leave a blank line between the start / end of
