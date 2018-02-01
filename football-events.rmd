@@ -16,6 +16,7 @@ Football Events by Jorge Saldivar
 library(ggplot2)
 library(dplyr)
 library(ggthemes)
+library(knitr)
 ```
 
 ```{r echo=FALSE, Load_the_Data}
@@ -37,7 +38,7 @@ In this study, I analyze football (soccer in US) events through a dataset compos
 
 ```{r, echo=FALSE}
 cols_to_show = c('event_type', 'side', 'location', 'situation', 'shot_place', 'shot_outcome', 'bodypart', 'assist_method', 'is_goal')
-head(events[11:15,cols_to_show])
+kable(head(events[11:15,cols_to_show]))
 ```
 
 # Univariate Plots Section
@@ -56,9 +57,13 @@ ggplot(aes(x=event_type, fill=event_type), data=events) +
   theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10))
 ```
 
-```{r echo=FALSE}
-table(events$event_type)
+```{r echo=FALSE, results='asis'}
+t = data.frame(table(events$event_type))
+colnames(t) = c('Event Type', 'Count')
+kable(t)
 ```
+
+
 
 > **Tip**: Make sure that you leave a blank line between the start / end of
 each code block and the end / start of your Markdown text so that it is
