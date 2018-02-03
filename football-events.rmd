@@ -1,4 +1,4 @@
-Football Events by Jorge Saldivar
+Understanding the European Football by Jorge Saldivar
 ========================================================
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
@@ -34,7 +34,7 @@ for (current_category in unique(dictionary$category)) {
 }
 ```
 
-In this study, I analyze football (soccer in US) events through a dataset composed of `r nrow(events)` events collected from 9,074 european games. The dataset is open source and available to download at https://www.kaggle.com/secareanualin/football-events. Each event has information about the type of event (11 types, including foul, corner, offside, and red card), the side of the team involved in the event (home or away), the location of the event in the field (e.g., defensive half, attacking half, penalty spot), the game situation in which the event happens (e.g., open play, corner, free kick). If the event is a shot, the dataset provides also information of the shot place (e.g., bottom left corner, top left corner, center of the goal), the shot outcome (e.g., on target, off target, blocked), the part of the body involved in the shot (i.e., left foot, right foot, head), the method used to assist the shoter (e.g., pass, cross, headed pass), and a boolean variable that indicates whether the shot ends up as a goal. There are complementary data about the events such as the team that generates the event or the players involved but in this analysis I will concentrate in the nine features presented before. As an example, the first five rows are shown below.
+In this study, I analyze football (soccer in US) events through a dataset composed of `r nrow(events)` events collected from 9,074 european games. The dataset is open source and available to download at https://www.kaggle.com/secareanualin/football-events. Each event has information about the type of event (11 types, including foul, corner, offside, and red card), the side of the team involved in the event (home or away), the location of the event in the pitch (e.g., defensive half, attacking half, penalty spot), the game situation in which the event happens (e.g., open play, corner, free kick). If the event is a shot, the dataset provides also information of the shot place (e.g., bottom left corner, top left corner, center of the goal), the shot outcome (e.g., on target, off target, blocked), the part of the body involved in the shot (i.e., left foot, right foot, head), the method used to assist the shoter (e.g., pass, cross, headed pass), and a boolean variable that indicates whether the shot ends up as a goal. There are complementary data about the events such as the team that generates the event or the players involved but in this analysis I will concentrate in the nine features presented before. As an example, the first five rows are shown below.
 
 ```{r, echo=FALSE}
 cols_to_show = c('event_type', 'side', 'location', 'situation', 'shot_place', 'shot_outcome', 'bodypart', 'assist_method', 'is_goal')
@@ -47,29 +47,61 @@ kable(head(events[11:15,cols_to_show]))
 
 ```{r echo=FALSE, Univariate_Plots}
 # order levels in decreasing order
-events$event_type = factor(events$event_type, levels=names(sort(table(events$event_type), decreasing=TRUE)))
-ggplot(aes(x=event_type, fill=event_type), data=events) +
-  geom_bar(colour="black") +
+event_types = factor(events$event_type, levels=names(sort(table(events$event_type), decreasing=TRUE)))
+t = data.frame(table(event_types))
+colnames(t) = c('event_type', 'count')
+ggplot(aes(x=event_type, y=count, fill=event_type), data=t) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50) +
   guides(fill=FALSE) +
   theme_economist() +
   xlab('Event Type') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10))
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
+  ylim(0, 250000)
 ```
 
-```{r echo=FALSE, results='asis'}
-t = data.frame(table(events$event_type))
-colnames(t) = c('Event Type', 'Count')
-kable(t)
+The figure above help us to have a first overview on the primary characteristics of the European football. Fouls and free kicks are the two most common events in games, followed by goal attempts --- they represent `r round(100*(sum(t[1:3,'count'])/nrow(events)),1)`% of the events in the dataset. The large occurrence of fouls and free kicks demonstrates that games are apparently not fluent but frenquently interrupted by ilegal plays and the resulting direct or indirect kicks. It is interesting to notice that even when fouls are among the most common events, games are characterized by fair plays considering the low frequency of yellow and red cards (`r round(100*(sum(t[c(7,10),'count'])/nrow(events)),1)`% of the total events). The figure shows that corners are not that common, which seems to indicate that goal attempts come more from open plays (e.g., give and go) than through set pieces. The low occurrence of penalties (`r round(100*(t[9,'count']/nrow(events)),1)`% of the total events) indicates that fouls are committed outside the goal area.
+
+## Side
+
+```{r echo=FALSE, Univariate_Plots2}
+# order levels in decreasing order
+side = factor(events$side, levels=names(sort(table(events$side), decreasing=TRUE)))
+tside = data.frame(table(side))
+colnames(tside) = c('side', 'count')
+ggplot(aes(x=side, y=count, fill=side), data=tside) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Side') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
+  ylim(0, 500000)
 ```
 
+The amount events per side are balanace between those related with home teams (`r round(100*(tside[1,'count']/nrow(events)),1)`%) and the ones belonged to away teams.
 
+## Location
 
-> **Tip**: Make sure that you leave a blank line between the start / end of
-each code block and the end / start of your Markdown text so that it is
-formatted nicely in the knitted text. Note as well that text on consecutive
-lines is treated as a single space. Make sure you have a blank line between
-your paragraphs so that they too are formatted for easy readability.
+```{r echo=FALSE, Univariate_Plots3}
+# order levels in decreasing order
+location = factor(events$location, levels=names(sort(table(events$location), decreasing=TRUE)))
+tlocation = data.frame(table(location, useNA="ifany"))
+colnames(tlocation) = c('location', 'count')
+ggplot(aes(x=location, y=count, fill=location), data=tlocation[1:19,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=3) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Location') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
+  ylim(0, 150000)
+```
+
+Less than half of the records (`r round(100*(sum(tlocation[1:19,'count'])/nrow(events)),1)`%) have registered the location of pitch where the event happened. The records with blank location were not included in the figure above. Some results in this figure might complement the insights obtained in the analysis of the event types. For example, fouls might occurre in the majority of cases in the defensive half and probably outside of the box. However, further analyses are required to better understand relationship between variables.
 
 # Univariate Analysis
 
