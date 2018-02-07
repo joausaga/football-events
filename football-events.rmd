@@ -23,7 +23,7 @@ library(knitr)
 # Load the Data
 dictionary = read.csv('dictionary.csv', stringsAsFactors = F, header = T)
 events = read.csv('events.csv', stringsAsFactors = F, header = T)
-# Using the dictionary, replace codes for their corresponding values
+# Using the given dictionary, replace codes for their corresponding values
 for (current_category in unique(dictionary$category)) {
   if (current_category %in% names(events)) {
     data_category = filter(dictionary, category==current_category)
@@ -34,23 +34,27 @@ for (current_category in unique(dictionary$category)) {
 }
 ```
 
-In this study, I analyze football (soccer in US) events through a dataset composed of `r nrow(events)` events collected from 9,074 european games. The dataset is open source and available to download at https://www.kaggle.com/secareanualin/football-events. Each event has information about the type of event (11 types, including foul, corner, offside, and red card), the side of the team involved in the event (home or away), the location of the event in the pitch (e.g., defensive half, attacking half, penalty spot), the game situation in which the event happens (e.g., open play, corner, free kick). If the event is a shot, the dataset provides also information of the shot place (e.g., bottom left corner, top left corner, center of the goal), the shot outcome (e.g., on target, off target, blocked), the part of the body involved in the shot (i.e., left foot, right foot, head), the method used to assist the shoter (e.g., pass, cross, headed pass), and a boolean variable that indicates whether the shot ends up as a goal. There are complementary data about the events such as the team that generates the event or the players involved but in this analysis I will concentrate in the nine features presented before. As an example, the first five rows are shown below.
+In this study, I analyze football (soccer in US) events through a dataset composed of `r nrow(events)` events collected from 9,074 european games. The dataset is open source and available to download at https://www.kaggle.com/secareanualin/football-events/data. Details of the events are represented through `r ncol(events)` features, including the type of event (11 types, including foul, corner, offside, and red card), the minute in which the event happens, the side of the team involved in the event (home or away), the location of the event in the pitch (e.g., defensive half, attacking half, penalty spot), the game situation in which the event happens (e.g., open play, corner, free kick). If the event is a shot, the dataset provides also information of the shot place (e.g., bottom left corner, top left corner, center of the goal), the shot outcome (e.g., on target, off target, blocked), the part of the body involved in the shot (i.e., left foot, right foot, head), the method used to assist the shoter (e.g., pass, cross, headed pass), and a boolean variable that indicates whether the shot ends up as a goal. There are complementary data about the events such as the team that generates the event or the players involved.
+
+# Univariate Analysis
+
+This analysis focused on 11 of the features, namely: event type, time, side, location, situation, shot place, shot outcome, body part, assist method, and team generator. No new variables were created for the study but to facilitate the analysis, the codes of the categorical variables are replaced with their textual values. The mapping between categories and values is recorded in a dictionary file that can be download together with the dataset from https://www.kaggle.com/secareanualin/football-events/data. As an example, next, it is shown five rows of the datasset.
 
 ```{r, echo=FALSE}
-cols_to_show = c('event_type', 'side', 'location', 'situation', 'shot_place', 'shot_outcome', 'bodypart', 'assist_method', 'is_goal')
+cols_to_show = c('event_type', 'time' ,'event_team', 'side', 'location', 'situation', 'shot_place', 'shot_outcome', 'bodypart', 'assist_method', 'is_goal')
 kable(head(events[11:15,cols_to_show]))
 ```
 
 # Univariate Plots Section
 
-## Event Types
+### Event Types
 
 ```{r echo=FALSE, Univariate_Plots}
 # order levels in decreasing order
 event_types = factor(events$event_type, levels=names(sort(table(events$event_type), decreasing=TRUE)))
-t = data.frame(table(event_types))
-colnames(t) = c('event_type', 'count')
-ggplot(aes(x=event_type, y=count, fill=event_type), data=t) +
+tevents = data.frame(table(event_types))
+colnames(tevents) = c('event_type', 'count')
+ggplot(aes(x=event_type, y=count, fill=event_type), data=tevents) +
   geom_bar(colour="black", stat = "identity") +
   geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50) +
   guides(fill=FALSE) +
@@ -61,9 +65,23 @@ ggplot(aes(x=event_type, y=count, fill=event_type), data=t) +
   ylim(0, 250000)
 ```
 
-The figure above help us to have a first overview on the primary characteristics of the European football. Fouls and free kicks are the two most common events in games, followed by goal attempts --- they represent `r round(100*(sum(t[1:3,'count'])/nrow(events)),1)`% of the events in the dataset. The large occurrence of fouls and free kicks demonstrates that games are apparently not fluent but frenquently interrupted by ilegal plays and the resulting direct or indirect kicks. It is interesting to notice that even when fouls are among the most common events, games are characterized by fair plays considering the low frequency of yellow and red cards (`r round(100*(sum(t[c(7,10),'count'])/nrow(events)),1)`% of the total events). The figure shows that corners are not that common, which seems to indicate that goal attempts come more from open plays (e.g., give and go) than through set pieces. The low occurrence of penalties (`r round(100*(t[9,'count']/nrow(events)),1)`% of the total events) indicates that fouls are committed outside the goal area.
+The figure above help us to have a first overview on the primary characteristics of the European football. Fouls and free kicks are the two most common events in games, followed by goal attempts --- they represent `r round(100*(sum(tevents[1:3,'count'])/nrow(events)),1)`% of the events in the dataset. The large occurrence of fouls and free kicks demonstrates that games are apparently not fluent but frenquently interrupted by ilegal plays and the resulting direct or indirect kicks. It is interesting to notice that even when fouls are among the most common events, games are characterized by fair plays considering the low frequency of yellow and red cards (`r round(100*(sum(tevents[c(7,10),'count'])/nrow(events)),1)`% of the total events). The figure shows that corners are not that common, which seems to indicate that goal attempts come more from open plays (e.g., give and go) than through set pieces. The low occurrence of penalties (`r round(100*(tevents[9,'count']/nrow(events)),1)`% of the total events) indicates that fouls are committed outside the goal area.
 
-## Side
+### Time
+
+```{r echo=FALSE, Univariate_PlotsT}
+ggplot(aes(x=time), data=events) +
+  geom_histogram(binwidth = 1) +
+  theme_economist() +
+  xlab('Time') +
+  ylab('Count') +
+  scale_x_continuous(breaks=seq(0,100,5))
+```
+
+
+The figure above shows that there is a slight but consistent increment in the number of events from the first minute to the end of the game. The final minutes of each half (45th and 90th) concentrate a large amount of events.
+
+### Side
 
 ```{r echo=FALSE, Univariate_Plots2}
 # order levels in decreasing order
@@ -77,13 +95,13 @@ ggplot(aes(x=side, y=count, fill=side), data=tside) +
   theme_economist() +
   xlab('Side') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
   ylim(0, 500000)
 ```
 
 The amount events per side are balanace between those related with home teams (`r round(100*(tside[1,'count']/nrow(events)),1)`%) and the ones belonged to away teams.
 
-## Location
+### Location
 
 ```{r echo=FALSE, Univariate_Plots3}
 # order levels in decreasing order
@@ -101,27 +119,149 @@ ggplot(aes(x=location, y=count, fill=location), data=tlocation[1:19,]) +
   ylim(0, 150000)
 ```
 
-Less than half of the records (`r round(100*(sum(tlocation[1:19,'count'])/nrow(events)),1)`%) have registered the location of pitch where the event happened. The records with blank location were not included in the figure above. Some results in this figure might complement the insights obtained in the analysis of the event types. For example, fouls might occurre in the majority of cases in the defensive half and probably outside of the box. However, further analyses are required to better understand relationship between variables.
+Less than half of the records (`r round(100*(sum(tlocation[1:19,'count'])/nrow(events)),1)`%) have registered the location of pitch where the event happened. The records with blank location are not included in the calculation of the figure above. Some results in this figure might complement the insights obtained in the analysis of the event types. For example, fouls might occurre in the majority of cases in the defensive half and probably outside of the box. Further analyses are required to better understand relationship between variables.
 
-# Univariate Analysis
+### Game situation
 
-> **Tip**: Now that you've completed your univariate explorations, it's time to
-reflect on and summarize what you've found. Use the questions below to help you
-gather your observations and add your own if you have other thoughts!
+```{r echo=FALSE, Univariate_Plots4}
+# order levels in decreasing order
+situation = factor(events$situation, levels=names(sort(table(events$situation), decreasing=TRUE)))
+tsituation = data.frame(table(situation, useNA="ifany"))
+colnames(tsituation) = c('situation', 'count')
+ggplot(aes(x=situation, y=count, fill=situation), data=tsituation[1:4,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=5) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Game situation') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
+  ylim(0, 200000)
+```
 
-### What is the structure of your dataset?
+Only `r round(100*(sum(tsituation[1:4,'count'])/nrow(events)),1)`% of the records are equipped with the situation that triggered the event. Records without mention of the game situation are not considered to draw the figure above that shows that in most cases events started from open plays. To a lesser extend, corners, set pieces, and free kicks caused events as well.
 
-### What is/are the main feature(s) of interest in your dataset?
+### Shot place
 
-### What other features in the dataset do you think will help support your \
-investigation into your feature(s) of interest?
+```{r echo=FALSE, Univariate_Plots5}
+# order levels in decreasing order
+shot_place = factor(events$shot_place, levels=names(sort(table(events$shot_place), decreasing=TRUE)))
+tshot_place = data.frame(table(shot_place, useNA="ifany"))
+colnames(tshot_place) = c('shot_place', 'count')
+ggplot(aes(x=shot_place, y=count, fill=shot_place), data=tshot_place[1:13,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Shot place') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
+  ylim(0, 60000)
+```
 
-### Did you create any new variables from existing variables in the dataset?
+Out of the `r nrow(events[events$event_type=='Attempt',])` attempts, `r sum(tshot_place[1:13,'count'])` (`r round(100*(sum(tshot_place[1:13,'count'])/nrow(events[events$event_type=='Attempt',])),1)`%) register where the shot ended up. The records without information about shot place are excluded from figure above (`r tshot_place[14,'count']` records). Most of the shots were blocked, of the remaining a large number of shots missed to one of the sides (left or right) or go to the center of the goal.
 
-### Of the features you investigated, were there any unusual distributions? \
-Did you perform any operations on the data to tidy, adjust, or change the form \
-of the data? If so, why did you do this?
+### Shot outcome
 
+```{r echo=FALSE, Univariate_Plots6}
+# order levels in decreasing order
+shot_outcome = factor(events$shot_outcome, levels=names(sort(table(events$shot_outcome), decreasing=TRUE)))
+tshot_outcome = data.frame(table(shot_outcome, useNA="ifany"))
+colnames(tshot_outcome) = c('shot_outcome', 'count')
+ggplot(aes(x=shot_outcome, y=count, fill=shot_outcome), data=tshot_outcome[1:4,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Shot outcome') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
+  ylim(0, 100000)
+```
+
+Out of the `r nrow(events[events$event_type=='Attempt',])` attempts, `r sum(tshot_outcome[1:4,'count'])` (`r round(100*(sum(tshot_outcome[1:4,'count'])/nrow(events[events$event_type=='Attempt',])),1)`%) register the shot outcome. The figure above does not include the records that do not report the shot outcome (`r tshot_outcome[5,'count']` records). In the figure above we can see that shoters have a probability of `r round((tshot_outcome[2,'count']/sum(tshot_outcome[1:4,'count']))*100,1) `% of hitting the target.
+
+### Body part
+
+```{r echo=FALSE, Univariate_Plots7}
+# order levels in decreasing order
+body_part = factor(events$bodypart, levels=names(sort(table(events$bodypart), decreasing=TRUE)))
+tbody_part = data.frame(table(body_part, useNA="ifany"))
+colnames(tbody_part) = c('body_part', 'count')
+ggplot(aes(x=body_part, y=count, fill=body_part), data=tbody_part[1:3,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Body Part') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
+  ylim(0, 130000)
+```
+
+All of the events of type *attempt* are equipped with information about the body part involved in the event. In the figure above we can see that the majority of attempts (`r round(100*(tbody_part[1,'count']/nrow(events[events$event_type=='Attempt',])),1)`% of the attempts) were performed using the right feet.
+
+### Assist method
+
+```{r echo=FALSE, Univariate_Plots8}
+# order levels in decreasing order
+assist_method = factor(events$assist_method, levels=names(sort(table(events$assist_method), decreasing=TRUE)))
+tassist_method = data.frame(table(assist_method, useNA="ifany"))
+colnames(tassist_method) = c('assist_method', 'count')
+ggplot(aes(x=assist_method, y=count, fill=assist_method), data=tassist_method) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Assist Method') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
+  ylim(0, 800000)
+```
+
+Passes represent the most common assist method followed by crosses. It is interesting to see that crosses are not frequently used in the top leagues of Europe as a method to assist strikers. This can be different in other parts of the world, like south-america, where cross is very a common assistance method.
+
+### Was it goal?
+
+```{r echo=FALSE, Univariate_Plots9}
+# order levels in decreasing order
+t_goal = data.frame(table(events$is_goal, useNA="ifany"))
+colnames(t_goal) = c('code', 'count')
+t_goal$code = as.numeric(t_goal$code)
+t_goal[t_goal$code==1,'code'] = 'No'
+t_goal[t_goal$code==2,'code'] = 'Yes'
+ggplot(aes(x=code, y=count, fill=code), data=t_goal) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Goal') +
+  ylab('Count') +
+  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
+  ylim(0, 920000)
+```
+
+The vast majority of events were not goals. Out of the `r nrow(events[events$event_type=='Attempt',])` attempts, `r t_goal[t_goal$code=='Yes','count']`  were goals. An effectiveness of `r round((t_goal[t_goal$code=='Yes','count']/nrow(events[events$event_type=='Attempt',]))*100,1)` %.
+
+## Event team generator
+
+```{r echo=FALSE, Univariate_Plots10}
+# order levels in decreasing order
+event_teams = factor(events$event_team, levels=names(sort(table(events$event_team), decreasing=TRUE)))
+t_teams = data.frame(table(event_teams, useNA="ifany"))
+colnames(t_teams) = c('team', 'count')
+ggplot(aes(x=team, y=count, fill=team), data=t_teams[1:20,]) +
+  geom_bar(colour="black", stat = "identity") +
+  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, size=2) +
+  guides(fill=FALSE) +
+  theme_economist() +
+  xlab('Top-20 teams that generate more events') +
+  ylab('Number of events') +
+  theme(axis.text.x  = element_text(angle=90,vjust=0.5, size=10)) +
+  ylim(0, 13000)
+```
+
+The dataset contains information about events generated by `r nrow(t_teams)` from Italy, Germany, France, Spain, and England. Taking a closer look at  the top-20 teams that generate more events, it can be seen that half of them belong to the Serie A (Italy), namely: Juventus, Fiorentina, AC Milan, AS Roma, Genova, Lazio, Atalanta, Napoli, Chievo, and Inter. Out of the rest, 5 teams are Spanish and 5 play in the Ligue 1 in France.
 
 # Bivariate Plots Section
 
