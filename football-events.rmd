@@ -383,42 +383,6 @@ ggplot(aes(x=location, y=count, fill=location), data=tlocation) +
   ylim(0, 12000)
 ```
 
-### Teams and fair play
-
-```{r echo=FALSE, Bivariate_Plots6}
-# Foul, yellow card, red card, second yellow card, penalty conceded
-teams = unique(events$event_team)
-fouls = c('Foul', 'Yellow card', 'Red card', 'Second yellow card', 'Penalty conceded')
-teams_fouls = data.frame()
-team=teams[1]
-for (team in teams) {
-  team_events = filter(events, event_team==team)
-  team_fouls = filter(team_events, event_type %in% fouls)
-  team_reg = data.frame(
-    team=team,
-    num_events=nrow(team_events),
-    num_fouls=nrow(team_fouls),
-    per_fouls=nrow(team_fouls)/nrow(team_events),
-    fouls=nrow(filter(team_fouls, event_type=='Foul')),
-    yellow_cards=nrow(filter(team_fouls, event_type=='Yellow card')),
-    second_yellow_cards=nrow(filter(team_fouls, event_type=='Second yellow card')),
-    red_cards=nrow(filter(team_fouls, event_type=='Red card')),
-    penalties=nrow(filter(team_fouls, event_type=='Penalty conceded'))
-  )
-  teams_fouls = rbind(teams_fouls, team_reg)
-}
-teams_fouls = arrange(teams_fouls, per_fouls)
-ggplot(aes(x=reorder(team,per_fouls), y=per_fouls, fill=team), data=teams_fouls[1:10,]) +
-  geom_bar(colour="black", stat = "identity") +
-  geom_text(aes(label=round(per_fouls,3)), position=position_dodge(width=0.9), vjust=-0.50, size=4) +
-  guides(fill=FALSE) +
-  theme_economist() +
-  xlab('Top-10 teams that conceded less fouls') +
-  ylab('Ratio of fouls by team\'s events') +
-  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
-  ylim(0, 0.25)
-```
-
 # Bivariate Analysis
 
 > **Tip**: As before, summarize what you found in your bivariate explorations
@@ -465,6 +429,7 @@ teams_effectiveness[1:10,'group'] = 'top'
 teams_effectiveness[11:nrow(teams_effectiveness),'group'] = 'rest'
 ggplot(aes(x=total_attempts, y=goals), data=teams_effectiveness) +
   geom_point(aes(size = effectiv*(10^effectiv), color=group), alpha = 0.5, position = 'jitter', show.legend = F) +
+  scale_color_manual(breaks = c('top','rest'), values=c('#56B4E9', 'red')) +
   geom_text(aes(label=ifelse(group %in% c('top'),paste0(as.character(team),'\n(',round(effectiv,3),')'),'')),hjust=0, vjust=0, size=2.5) +
   guides(fill=TRUE) +
   theme_economist() +
@@ -474,7 +439,50 @@ ggplot(aes(x=total_attempts, y=goals), data=teams_effectiveness) +
   xlim(0, 4000)
 ```
 
-Green bubbles represent the top-10 most effective teams. The team effectiveness is specified by the size of the bubbles and in parenthesis under the team name. Let's investigate further the characteristic of Barcelona's attempt that ended up as goals (e.g., location, game situation, assitance, method).
+Green bubbles represent the top-10 most effective teams. The team effectiveness is specified by the size of the bubbles and in parenthesis under the team name. Let's investigate further the characteristic of Barcelona's attempt that ended up as goals (e.g., location, game situation, assitance method).
+
+### Teams and fair play
+
+```{r echo=FALSE, Bivariate_Plots6}
+# Foul, yellow card, red card, second yellow card, penalty conceded
+teams = unique(events$event_team)
+fouls = c('Foul', 'Yellow card', 'Red card', 'Second yellow card', 'Penalty conceded')
+teams_fouls = data.frame()
+for (team in teams) {
+  team_events = filter(events, event_team==team)
+  team_fouls = filter(team_events, event_type %in% fouls)
+  team_reg = data.frame(
+    team=team,
+    num_events=nrow(team_events),
+    num_fouls=nrow(team_fouls),
+    per_fouls=nrow(team_fouls)/nrow(team_events),
+    fouls=nrow(filter(team_fouls, event_type=='Foul')),
+    yellow_cards=nrow(filter(team_fouls, event_type=='Yellow card')),
+    second_yellow_cards=nrow(filter(team_fouls, event_type=='Second yellow card')),
+    red_cards=nrow(filter(team_fouls, event_type=='Red card')),
+    penalties=nrow(filter(team_fouls, event_type=='Penalty conceded')),
+    stringsAsFactors=FALSE
+  )
+  teams_fouls = rbind(teams_fouls, team_reg)
+}
+teams_fouls = arrange(teams_fouls, per_fouls)
+teams_fouls[1:10,'group'] = 'fair-play'
+teams_fouls[11:nrow(teams_fouls),'group'] = 'rest'
+teams_fouls[teams_fouls$team=='Bayern Munich','team'] = 'Bayern M'
+teams_fouls[teams_fouls$team=='Borussia Dortmund','team'] = 'Borussia'
+ggplot(aes(x=num_events, y=num_fouls), data=teams_fouls) +
+  geom_point(aes(size = per_fouls*(10^per_fouls), color=group), alpha = 0.5, position = 'jitter', show.legend = F) +
+  scale_color_manual(breaks = c('fair-play','rest'), values=c('red', '#56B4E9')) +
+  geom_text(aes(label=ifelse(group %in% c('fair-play'),paste0(as.character(team),'\n(',round(per_fouls,2),')'),'')),hjust=0, vjust=0, size=2.5) +
+  guides(fill=TRUE) +
+  theme_economist() +
+  xlab('Events') +
+  ylab('Fouls') +
+  ylim(0,4000) +
+  xlim(0, 12600)
+```
+
+
 
 ### Barcelona's goal attempts
 
