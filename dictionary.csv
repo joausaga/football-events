@@ -1,0 +1,67 @@
+category,code,description
+event_type,0,Announcement
+event_type,1,Attempt
+event_type,2,Corner
+event_type,3,Foul
+event_type,4,Yellow card
+event_type,5,Second yellow card
+event_type,6,Red card
+event_type,7,Substitution
+event_type,8,Free kick won
+event_type,9,Offside
+event_type,10,Hand ball
+event_type,11,Penalty conceded
+event_type2,12,Key Pass
+event_type2,13,Failed through ball
+event_type2,14,Sending off
+event_type2,15,Own goal
+side,1,Home
+side,2,Away
+shot_place,1,Bit too high
+shot_place,2,Blocked
+shot_place,3,Bottom left corner
+shot_place,4,Bottom right corner
+shot_place,5,Centre of the goal
+shot_place,6,High and wide
+shot_place,7,Hits the bar
+shot_place,8,Misses to the left
+shot_place,9,Misses to the right
+shot_place,10,Too high
+shot_place,11,Top centre of the goal
+shot_place,12,Top left corner
+shot_place,13,Top right corner
+shot_outcome,1,On target
+shot_outcome,2,Off target
+shot_outcome,3,Blocked
+shot_outcome,4,Hit the bar
+location,1,Attacking half
+location,2,Defensive half
+location,3,Centre of the box
+location,4,Left wing
+location,5,Right wing
+location,6,Difficult angle and long range
+location,7,Difficult angle on the left
+location,8,Difficult angle on the right
+location,9,Left side of the box
+location,10,Left side of the six yard box
+location,11,Right side of the box
+location,12,Right side of the six yard box
+location,13,Very close range
+location,14,Penalty spot
+location,15,Outside the box
+location,16,Long range
+location,17,More than 35 yards
+location,18,More than 40 yards
+location,19,Not recorded
+bodypart,1,right foot
+bodypart,2,left foot
+bodypart,3,head
+assist_method,0,None
+assist_method,1,Pass
+assist_method,2,Cross
+assist_method,3,Headed pass
+assist_method,4,Through ball
+situation,1,Open play
+situation,2,Set piece
+situation,3,Corner
+situation,4,Free kick
