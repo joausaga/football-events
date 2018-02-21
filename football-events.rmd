@@ -449,73 +449,71 @@ from the English Premier League are (i.e., Manchester City, Liverpool,
 Arsenal, Tottenham, Chelsea, QPR, and Southampton) showing that teams 
 in England are strongly characterized by an offensive play.
 
-### Goals and assitance method
+### Attempts and assitance method
 
 ```{r echo=FALSE, Bivariate_Plots1}
-goal_assistance = events %>% filter(event_type == 'Attempt' & is_goal == 1) %>% 
+goal_assistance = events %>% filter(event_type == 'Attempt') %>% 
   select(assist_method, is_goal)
-assist_method = factor(goal_assistance$assist_method, 
-                       levels=names(sort(table(goal_assistance$assist_method), 
-                                         decreasing=TRUE)))
-tassist_method = data.frame(table(assist_method, useNA="ifany"))
-colnames(tassist_method) = c('assist_method', 'count')
-ggplot(aes(x=assist_method, y=count, fill=assist_method), data=tassist_method) +
-  geom_bar(colour="black", stat = "identity") +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, 
-            size=4) +
-  guides(fill=FALSE) +
+goal_assistance = mutate(goal_assistance, 
+                         f_goal=ifelse(is_goal==1,'Yes','No'))
+goal_assistance$assist_method = factor(goal_assistance$assist_method, 
+                   levels=names(sort(table(goal_assistance$assist_method), 
+                                     decreasing=TRUE)))
+ggplot(goal_assistance, aes(x=assist_method, fill=f_goal)) + 
+  geom_bar() + 
   theme_economist() +
-  xlab('Assist Method') +
+  xlab('Assistance Method') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
-  ylim(0, 9000)
+  guides(fill=guide_legend(title="Goal"))
 ```
 
 We saw previously that, in general, any assistance method is involved in events. 
-However, when analyzing exclusively events that end up as goals, passes are the 
-primary method of assistance. 
+However, when analyzing exclusively attempt events, which end up as goals and those 
+which do not, passes are the primary method of assistance. The distribution of 
+assistance methods are pretty similar for both unsuccessful attempts and goal 
+attempts, except for the method through ball, which appear to be more common in
+attempts that end up as goals.
 
-### Goals and Time
+### Attempts and Time
 
 ```{r echo=FALSE, Bivariate_Plots2}
-goal_time = events %>% filter(event_type == 'Attempt' & is_goal == 1) %>% 
+goal_time = events %>% filter(event_type == 'Attempt') %>% 
   select(time, is_goal)
-ggplot(aes(x=time), data=goal_time) +
-  geom_histogram(binwidth = 1) +
+goal_time = mutate(goal_time, f_goal=ifelse(is_goal==1,'Yes','No'))
+ggplot(aes(x=f_goal, y=time), data=goal_time) +
+  geom_jitter(alpha = .05) +
+  geom_boxplot(alpha = .5,color = 'blue') +
   theme_economist() +
-  xlab('Time') +
-  ylab('Count') +
-  scale_x_continuous(breaks=seq(0,100,5))
+  xlab('Goal') +
+  ylab('Minute') + 
+  scale_y_continuous(breaks=seq(0,100,5))
 ```
 
-Peaks of goals are found in two particular moments of games, at the end of the 
-first-half and the end of the game. Having goals at the end of the game is 
-somehow expected because in the case of draws both teams probably try hard to 
-untie or in situations where one of the team is leading the score, the losing 
-team makes its best effort to avoid a defeat. However, it is interesting to see 
-that something similar happens, on a smaller scale, also at the end of the first 
-half.
+Attempts that do not end up as goals show to be distributed uniformily throughtout
+games however peaks of goals are found in two particular moments of games, at 
+the end of the first-half (minute 45) and the end of the game (minute 90). The 
+distribution of attempts are similar in both goals and no goals. Having
+goals at the end of the game is somehow expected because in the case of draws 
+both teams probably try hard to untie or in situations where one of the team is 
+leading the score, the losing team makes its best effort to avoid a defeat. 
+However, it is interesting to see that something similar happens, on a smaller 
+scale, also at the end of the first half.
 
 ### Goals and body part
 
 ```{r echo=FALSE, Bivariate_Plots3}
-goal_bpart = events %>% filter(event_type == 'Attempt' & is_goal == 1) %>% 
+goal_bpart = events %>% filter(event_type == 'Attempt') %>% 
   select(bodypart, is_goal)
-body_part = factor(goal_bpart$bodypart, 
-                   levels=names(sort(table(goal_bpart$bodypart), 
-                                     decreasing=TRUE)))
-tbody_part = data.frame(table(body_part, useNA="ifany"))
-colnames(tbody_part) = c('body_part', 'count')
-ggplot(aes(x=body_part, y=count, fill=body_part), data=tbody_part) +
-  geom_bar(colour="black", stat = "identity") +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, 
-            size=4) +
-  guides(fill=FALSE) +
+goal_bpart = mutate(goal_bpart, f_goal=ifelse(is_goal==1,'Yes','No'))
+goal_bpart$bodypart = factor(goal_bpart$bodypart, 
+                      levels=names(sort(table(goal_bpart$bodypart), 
+                                   decreasing=TRUE)))
+ggplot(goal_bpart, aes(x=bodypart, fill=f_goal)) + 
+  geom_bar() + 
   theme_economist() +
-  xlab('Body part') +
+  xlab('Body Part') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
-  ylim(0, 15000)
+  guides(fill=guide_legend(title="Goal"))
 ```
 
 As in the general case, goals are in the majority of cases scored with the right 
@@ -524,57 +522,50 @@ foot.
 ### Goals and game situation
 
 ```{r echo=FALSE, Bivariate_Plots4}
-goal_situation = events %>% filter(event_type == 'Attempt' & is_goal == 1) %>% 
+goal_situation = events %>% filter(event_type == 'Attempt') %>% 
   select(situation, is_goal)
-situation = factor(goal_situation$situation, 
-                   levels=names(sort(table(goal_situation$situation), 
-                                     decreasing=TRUE)))
-tsituation = data.frame(table(situation, useNA="ifany"))
-colnames(tsituation) = c('situation', 'count')
-ggplot(aes(x=situation, y=count, fill=situation), data=tsituation) +
-  geom_bar(colour="black", stat = "identity") +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, 
-            size=4) +
-  guides(fill=FALSE) +
+goal_situation = mutate(goal_situation, f_goal=ifelse(is_goal==1,'Yes','No'))
+goal_situation$situation = factor(goal_situation$situation, 
+                           levels=names(sort(table(goal_situation$situation), 
+                                        decreasing=TRUE)))
+ggplot(goal_situation, aes(x=situation, fill=f_goal)) + 
+  geom_bar() + 
   theme_economist() +
-  xlab('Situation') +
+  xlab('Game situation') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(vjust=0.5, size=10)) +
-  ylim(0, 18000)
+  guides(fill=guide_legend(title="Goal"))
 ```
 
 The vast majority of goals come from open plays, which might indicate that 
-European teams are not that effective in set pieces, free kicks, or corners. 
-Further explorations are required to understand how many of the attempts that 
-did not end as goals did not come from open plays.
+European teams are not that effective in set pieces, free kicks, or corners. Set 
+pieces appear to be more common in goal attempts than in attempts that do not
+end up as goals.
 
 ### Goals and location
 
 ```{r echo=FALSE, Bivariate_Plots5}
-goal_location = events %>% filter(event_type == 'Attempt' & is_goal == 1) %>% 
+goal_location = events %>% filter(event_type == 'Attempt') %>% 
   select(location, is_goal)
-location = factor(goal_location$location, 
-                  levels=names(sort(table(goal_location$location), 
-                                    decreasing=TRUE)))
-tlocation = data.frame(table(location, useNA="ifany"))
-colnames(tlocation) = c('location', 'count')
-ggplot(aes(x=location, y=count, fill=location), data=tlocation) +
-  geom_bar(colour="black", stat = "identity") +
-  geom_text(aes(label=count), position=position_dodge(width=0.9), vjust=-0.50, 
-            size=4) +
-  guides(fill=FALSE) +
+goal_location = mutate(goal_location, f_goal=ifelse(is_goal==1,'Yes','No'))
+goal_location$location = factor(goal_location$location, 
+                           levels=names(sort(table(goal_location$location), 
+                                        decreasing=TRUE)))
+ggplot(goal_location, aes(x=location, fill=f_goal)) + 
+  geom_bar() + 
   theme_economist() +
   xlab('Location') +
   ylab('Count') +
-  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10)) +
-  ylim(0, 12000)
+  guides(fill=guide_legend(title="Goal")) +
+  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10))
 ```
 
 Teams score in the majority of cases inside and in the center of the box 
 (`r round((100*(tlocation[1,'count']/sum(tlocation[,'count']))),0)`%), which is 
 something expected considering the closeness to the goal. For every goal from 
 outside the box, there are `r round(tlocation[1,'count']/tlocation[3,'count'],0)` 
-goals scored in the center of the box.
+goals scored in the center of the box. Even when goals are mainly scored from the
+center of the box, it is interesting to see the large proportion of attempts that 
+are also miss from this location.
 
 # Bivariate Analysis
 
@@ -622,25 +613,29 @@ for (team in teams) {
                          total_attempts=unlist(team_regs[1,'n']+
                                                  team_regs[2,'n']),
                          effectiv=unlist(team_regs[2,'n']/
-                                           (team_regs[1,'n']+team_regs[2,'n']))
-                        )
+                                           (team_regs[1,'n']+team_regs[2,'n'])),
+                         stringsAsFactors=FALSE)
   teams_effectiveness = rbind(teams_effectiveness, team_effe, 
                               stringsAsFactors=FALSE)
 }
 teams_effectiveness = arrange(teams_effectiveness, desc(effectiv))
-teams_effectiveness[1:10,'group'] = 'top'
-teams_effectiveness[11:nrow(teams_effectiveness),'group'] = 'rest'
+teams_effectiveness[1:5,'group'] = 'top-5 most effective team'
+teams_effectiveness[6:nrow(teams_effectiveness),'group'] = 'rest'
+teams_effectiveness$team = as.character(teams_effectiveness$team)
+teams_effectiveness[teams_effectiveness$team=='Paris Saint-Germain','team'] = 'PSG'
 pl_teams_effectiveness = ggplot(aes(x=total_attempts, y=goals), 
                                 data=teams_effectiveness) +
   geom_point(aes(size = effectiv*(10^effectiv), color=group), 
-             alpha = 0.5, position = 'jitter', show.legend = F) +
-  scale_color_manual(breaks = c('top','rest'), values=c('#56B4E9', 'red')) +
-  geom_text(aes(label=ifelse(group %in% c('top'),
+             alpha = 0.5, position = 'jitter', show.legend = T) +
+  scale_color_manual(name = element_blank(),
+                     breaks = c('top-5 most effective team','rest'), 
+                     values=c('#56B4E9', 'red')) +
+  geom_text(aes(label=ifelse(group %in% c('top-5 most effective team'),
                              paste0(as.character(team),
                                     '\n(',round(effectiv,3),')'),'')),
             hjust=0, vjust=0, size=2.5) +
-  guides(fill=TRUE) +
   theme_economist() +
+  guides(size=guide_legend(title="Goals by attempts", ncol = 6, byrow = TRUE)) +
   xlab('Attempts') +
   ylab('Goals') +
   ylim(0,610) +
@@ -670,12 +665,6 @@ barcelona_attempts = events %>% filter(event_team=='Barcelona' &
 colnames(barcelona_attempts) = c('Field location', 'Game situation', 
                                  'Assitance method', 'Number of goals')
 kable(barcelona_attempts[1:10,])
-#t_barcelona_attempts = data.frame(table(barcelona_attempts[,c('location','assist_method')]))
-#ggplot(aes(x=reorder(location,-num_goals), y=num_goals, fill=location), data=barcelona_attempts) +
-#  geom_bar(colour="black", stat = "identity") +
-#  theme_economist() +
-#  theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=10), legend.position="none") +
-#  facet_grid(situation ~ assist_method, scales="free")
 ```
 
 Interestingly Barcelona's goal attempts follow the general patterns. That is to 
@@ -709,25 +698,28 @@ for (team in teams) {
   teams_fouls = rbind(teams_fouls, team_reg)
 }
 teams_fouls = arrange(teams_fouls, per_fouls)
-teams_fouls[1:10,'group'] = 'fair-play'
-teams_fouls[11:nrow(teams_fouls),'group'] = 'rest'
-teams_fouls[teams_fouls$team=='Bayern Munich','team'] = 'Bayern M'
-teams_fouls[teams_fouls$team=='Borussia Dortmund','team'] = 'Borussia'
+teams_fouls[1:5,'group'] = 'top-5 fair-play team'
+teams_fouls[6:nrow(teams_fouls),'group'] = 'rest'
+teams_fouls$label_ratio = ifelse(teams_fouls$team=='Bayern Munich', 
+                                 paste0(as.character(teams_fouls$team),'\n(',
+                                    round(teams_fouls$per_fouls,2),')'),
+                                 paste0(as.character(teams_fouls$team),' (',
+                                    round(teams_fouls$per_fouls,2),')'))
 ggplot(aes(x=num_events, y=num_fouls), data=teams_fouls) +
   geom_point(aes(size = per_fouls*(10^per_fouls), color=group), alpha = 0.5, 
-             position = 'jitter', show.legend = F) +
-  scale_color_manual(breaks = c('fair-play','rest'), values=c('red', 
-                                                              '#56B4E9')) +
-  geom_text(aes(label=ifelse(group %in% c('fair-play'),
-                             paste0(as.character(team),'\n(',
-                                    round(per_fouls,2),')'),'')),
+             position = 'jitter', show.legend = T) +
+  scale_color_manual(name = element_blank(), 
+                     breaks = c('top-5 fair-play team','rest'), 
+                     values=c('#56B4E9', 'red')) +
+  geom_text(aes(label=ifelse(group %in% c('top-5 fair-play team'),
+                            label_ratio,'')),
             hjust=0, vjust=0, size=2.5) +
-  guides(fill=TRUE) +
   theme_economist() +
+  guides(size=guide_legend(title="Fouls by events")) +
   xlab('Events') +
   ylab('Fouls') +
   ylim(0,4000) +
-  xlim(0, 12600)
+  xlim(0, 12800)
 ```
 
 The red bubbles are used to represent the teams that conceded the less number of 
@@ -803,6 +795,25 @@ name of the team, it is shown the ratio of goals over attempts.
 
 # Reflection
 
+## Process and challenges
+
+This study is based on data about football events. None data transformation task 
+was required to perform since the dataset was already in a tidy 
+format. The only pre-proccesing task performed was the replacement of the codes 
+of the categorical variables with their values. After choosing the features to 
+be studied, we explored them through univariate, bivariate, and multivariate 
+analyses. Considering the most of the selected features are categorical, it was 
+a challenge to find the correct way of plotting them in bivariate charts. We 
+decided to use stacked bar charts to explore relationships between categorical
+features. When possible, we employed boxplots. Also, understanding some 
+categories of features was not easy. We had to look up espcialize specific 
+(e.g., [Football Terms](http://www.topendsports.com/sport/soccer/terms.htm),
+[Assist Football](https://en.wikipedia.org/wiki/Assist_(football))) 
+to learn the meaning of, for example, through ball when talking about 
+assistance methods or set piece in the case of game situations.
+
+## Insights and opportunities for future work
+
 It was found that a large number of attempts do not necessarily mean more goals. 
 For example, we saw that Barcelona is not the team with most attempts (see the 
 first plot in the previous section) however it is the most effective, 
@@ -813,8 +824,8 @@ ball possession allows Barcelona to also concede few fouls since they control
 game most of the time. It remains unexplore and for future work, whether 
 Barcelona is among the teams that most fouls receive. Also, as future work, it 
 would be interesting to further understand the characteristic of the Barcelona's 
-offensive play, for example, what is the most effective combination of field 
-location, game situation, and assistance method.
+offensive play, for example, what is in their case the most effective combination 
+of field location, game situation, and assistance method.
 
 <!--- **Tip**: Here's the final step! Reflect on the exploration you performed and
 the insights you found. What were some of the struggles that you went through?
